@@ -6,22 +6,30 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
 import android.os.Message;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.dengyi.mobilesafe.R;
+import com.lidroid.xutils.HttpUtils;
+import com.lidroid.xutils.exception.HttpException;
+import com.lidroid.xutils.http.ResponseInfo;
+import com.lidroid.xutils.http.callback.RequestCallBack;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import android.os.Handler;
+
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-
 
 import utils.StreamUtils;
 
@@ -33,6 +41,7 @@ public class SplashActivity extends Activity {
     private static final int CODE_JSON_ERROR = 3;
     private static final int CODE_ENTER_HOME = 4;
     public TextView tvVersion;
+    public TextView tvProgress;
     String mVersionName;//版本名字
     int mVersionCode;//版本代码
     String mDesc;//版本描述
@@ -72,13 +81,14 @@ public class SplashActivity extends Activity {
     };
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.splash);
         tvVersion= (TextView) findViewById(R.id.tv_version);
         tvVersion.setText("版本号："+getVersionName());
-
+        tvProgress= (TextView) findViewById(R.id.tv_progress);
         checkVersion();
     }
 
@@ -201,11 +211,13 @@ public class SplashActivity extends Activity {
      */
     private void showUpdateDailog() {
         AlertDialog.Builder builder=new AlertDialog.Builder(this);
-        builder.setTitle("最新版："+mVersionName);
+        builder.setTitle("最新版：" + mVersionName);
         builder.setMessage(mDesc);
+     //   builder.setCancelable(false);//体验不好
         builder.setPositiveButton("立即更新", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                download();
                 System.out.println("立即更新");
             }
         });
@@ -215,6 +227,13 @@ public class SplashActivity extends Activity {
                 System.out.println("以后再说");
                 enterHome();
 
+            }
+        });
+        //取消监听
+        builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                enterHome();
             }
         });
         builder.show();
@@ -227,5 +246,51 @@ public class SplashActivity extends Activity {
         startActivity(intent);
         //跳转下一个页面，并且销毁当前页面
         finish();
+    }
+    /**
+     * 下载apk
+     */
+    protected void download(){
+        if(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
+//            String target= Environment.getExternalStorageDirectory()+"update.apk";
+            tvProgress.setVisibility(View.VISIBLE);
+            String target="sdcard/update.apk";
+            HttpUtils utils= new HttpUtils();
+            utils.download(mDownloadUrl, target, new RequestCallBack<File>() {
+                //文件下载进度
+                @Override
+                public void onLoading(long total, long current, boolean isUploading) {
+                    super.onLoading(total, current, isUploading);
+                    System.out.println("下载进度：" + current + "/" + total);
+                    tvProgress.setText("下载进度："+current*100/total+"%");
+                }
+
+                @Override
+                public void onSuccess(ResponseInfo<File> responseInfo) {
+                    Toast.makeText(SplashActivity.this,"下载成功",Toast.LENGTH_LONG).show();
+                    //跳转到系统下载页面,安装
+                    Intent intent=new Intent(Intent.ACTION_VIEW);
+                    intent.addCategory(Intent.CATEGORY_DEFAULT);
+                    intent.setDataAndType(Uri.fromFile(responseInfo.result),
+                            "application/vnd.android.package-archive");
+                    startActivity(intent);
+                    startActivityForResult(intent, 0);//与onActivityResult配对
+                }
+
+                @Override
+                public void onFailure(HttpException e, String s) {
+                    Toast.makeText(SplashActivity.this,"下载失败",Toast.LENGTH_LONG).show();
+                }
+            });
+        }else {
+            Toast.makeText(SplashActivity.this,"没有SD卡",Toast.LENGTH_LONG).show();
+        }
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        enterHome();
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }
