@@ -147,29 +147,30 @@ public class SplashActivity extends Activity {
 /**
  * 模拟器可用ip（10.0.2.2）代替
  */
-                    URL url=new URL("http://10.0.2.2:8080/update.json");
-                    conn =(HttpURLConnection) url.openConnection();
+//                    URL url=new URL("http://10.0.2.2:8080/update.json");
+                    URL url = new URL("http://192.168.0.104:8080/update.json");
+                    conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("GET");
                     conn.setConnectTimeout(5000);//链接超时
                     conn.setReadTimeout(5000);//读取超时
                     conn.connect();//连接服务器
-                    int responseCode=conn.getResponseCode();//获取响应码
-                    if(responseCode==200){
-                        InputStream inputStream=conn.getInputStream();
-                        String result=StreamUtils.readFromStream(inputStream);
+                    int responseCode = conn.getResponseCode();//获取响应码
+                    if (responseCode == 200) {
+                        InputStream inputStream = conn.getInputStream();
+                        String result = StreamUtils.readFromStream(inputStream);
                         System.out.println(result);
 
-                        JSONObject jsonObject=new JSONObject(result);
-                        mVersionName=jsonObject.getString("versionName");
-                        mVersionCode=jsonObject.getInt("versionCode");
-                        mDesc=jsonObject.getString("description");
-                        mDownloadUrl=jsonObject.getString("downloadUrl");
-                       // System.out.println(mDesc);
-                        if(mVersionCode>getVersionCode()){
+                        JSONObject jsonObject = new JSONObject(result);
+                        mVersionName = jsonObject.getString("versionName");
+                        mVersionCode = jsonObject.getInt("versionCode");
+                        mDesc = jsonObject.getString("description");
+                        mDownloadUrl = jsonObject.getString("downloadUrl");
+                        // System.out.println(mDesc);
+                        if (mVersionCode > getVersionCode()) {
                             //弹出升级对话框
-                            msg.what= CODE_UPDATE_DAILOG;
+                            msg.what = CODE_UPDATE_DAILOG;
 //                            showUpdateDailog();
-                        }else {
+                        } else {
                             enterHome();
                         }
                     }
