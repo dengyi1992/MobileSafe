@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:dengyi="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <TextView
+        android:id="@+id/tv_functions"
+        android:text="功能列表"
+       style="@style/MyTitleStyle" />
+
+
+    <com.dengyi.mobilesafe.view.SettingItemView
+        android:id="@+id/siv_update"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        dengyi:desc_off="自动更新已关闭"
+        dengyi:desc_on="自动更新已开启"
+        dengyi:title="自动更新设置" />
+
+</LinearLayout>

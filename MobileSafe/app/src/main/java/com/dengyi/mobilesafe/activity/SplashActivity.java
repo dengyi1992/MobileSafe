@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -78,65 +77,52 @@ public class SplashActivity extends Activity {
                 default:
                     break;
             }
-        }
-
-        ;
+        };
     };
-    private SharedPreferences mPref;
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.splash);
-        tvVersion = (TextView) findViewById(R.id.tv_version);
-        tvVersion.setText("版本号：" + getVersionName());
-        tvProgress = (TextView) findViewById(R.id.tv_progress);
-        mPref = getSharedPreferences("config", MODE_PRIVATE);
-        boolean auto_Update = mPref.getBoolean("auto_update", true);
-        if (auto_Update) {
-            checkVersion();
-        } else {
-            //延时2秒后发送空消息
-            mHandler.sendEmptyMessageDelayed(CODE_ENTER_HOME, 2000);
-            enterHome();
-
-        }
+        tvVersion= (TextView) findViewById(R.id.tv_version);
+        tvVersion.setText("版本号："+getVersionName());
+        tvProgress= (TextView) findViewById(R.id.tv_progress);
+        checkVersion();
     }
 
     /**
      * 获取本地版本名
-     *
      * @return
      */
-    private String getVersionName() {
-
+    private String getVersionName(){
+        int versionCode;
         String versionName = null;
-        PackageManager packageManager = getPackageManager();
+        PackageManager packageManager= getPackageManager();
         try {
-            PackageInfo packageInfo = packageManager.getPackageInfo(getPackageName(), 0);
+            PackageInfo packageInfo=packageManager.getPackageInfo(getPackageName(),0);
             //获取包的信息
-            versionName = packageInfo.versionName;
+            versionCode=packageInfo.versionCode;
+            versionName=packageInfo.versionName;
 
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
         return versionName;
     }
-
     /**
      * 获取本地版代码
-     *
      * @return
      */
-    private int getVersionCode() {
+    private int getVersionCode(){
         int versionCode = 0;
 
-        PackageManager packageManager = getPackageManager();
+        PackageManager packageManager= getPackageManager();
         try {
-            PackageInfo packageInfo = packageManager.getPackageInfo(getPackageName(), 0);
+            PackageInfo packageInfo=packageManager.getPackageInfo(getPackageName(),0);
             //获取包的信息
-            versionCode = packageInfo.versionCode;
+            versionCode=packageInfo.versionCode;
             return versionCode;
 
         } catch (PackageManager.NameNotFoundException e) {
@@ -144,19 +130,18 @@ public class SplashActivity extends Activity {
         }
         return -1;
     }
-
     /**
-     * 从服务器获取版本信息进行校验
+     *从服务器获取版本信息进行校验
      * 放入子线程
      */
-    private void checkVersion() {
-        final long startTime = System.currentTimeMillis();
-        //启动子线程异步加载
+    private void checkVersion(){
+     final long startTime=System.currentTimeMillis();
+    //启动子线程异步加载
 
-        new Thread() {
+        new Thread(){
             @Override
             public void run() {
-                Message msg = Message.obtain();
+                Message msg= Message.obtain();
                 HttpURLConnection conn = null;
                 try {
 /**
@@ -192,28 +177,28 @@ public class SplashActivity extends Activity {
 
                 } catch (MalformedURLException e) {
                     //url错误解析
-                    msg.what = CODE_URL_ERROR;
+                    msg.what= CODE_URL_ERROR;
                     e.printStackTrace();
                 } catch (IOException e) {
                     //网络错误
-                    msg.what = CODE_NET_ERROR;
+                    msg.what= CODE_NET_ERROR;
                     e.printStackTrace();
                 } catch (JSONException e) {
-                    msg.what = CODE_JSON_ERROR;
+                    msg.what= CODE_JSON_ERROR;
                     e.printStackTrace();
-                } finally {
-                    long endTime = System.currentTimeMillis();
-                    long timeUsed = endTime - startTime;
-                    if (timeUsed < 2000) {
+                }finally {
+                    long endTime=System.currentTimeMillis();
+                    long timeUsed=endTime-startTime;
+                    if(timeUsed<2000){
                         try {
-                            Thread.sleep(2000 - timeUsed);
+                            Thread.sleep(2000-timeUsed);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                     }
                     mHandler.sendMessage(msg);
                     //关闭网络链接
-                    if (conn != null) {
+                    if (conn!=null){
                         conn.disconnect();
                     }
                 }
@@ -226,10 +211,10 @@ public class SplashActivity extends Activity {
      * 升级对话框
      */
     private void showUpdateDailog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder=new AlertDialog.Builder(this);
         builder.setTitle("最新版：" + mVersionName);
         builder.setMessage(mDesc);
-        //   builder.setCancelable(false);//体验不好
+     //   builder.setCancelable(false);//体验不好
         builder.setPositiveButton("立即更新", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -254,40 +239,38 @@ public class SplashActivity extends Activity {
         });
         builder.show();
     }
-
     /**
      * 进入主界面
      */
-    private void enterHome() {
-        Intent intent = new Intent(this, HomeActivity.class);
+    private void enterHome(){
+        Intent intent= new Intent(this,HomeActivity.class);
         startActivity(intent);
         //跳转下一个页面，并且销毁当前页面
         finish();
     }
-
     /**
      * 下载apk
      */
-    protected void download() {
-        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+    protected void download(){
+        if(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
 //            String target= Environment.getExternalStorageDirectory()+"update.apk";
             tvProgress.setVisibility(View.VISIBLE);
-            String target = "sdcard/update.apk";
-            HttpUtils utils = new HttpUtils();
+            String target="sdcard/update.apk";
+            HttpUtils utils= new HttpUtils();
             utils.download(mDownloadUrl, target, new RequestCallBack<File>() {
                 //文件下载进度
                 @Override
                 public void onLoading(long total, long current, boolean isUploading) {
                     super.onLoading(total, current, isUploading);
                     System.out.println("下载进度：" + current + "/" + total);
-                    tvProgress.setText("下载进度：" + current * 100 / total + "%");
+                    tvProgress.setText("下载进度："+current*100/total+"%");
                 }
 
                 @Override
                 public void onSuccess(ResponseInfo<File> responseInfo) {
-                    Toast.makeText(SplashActivity.this, "下载成功", Toast.LENGTH_LONG).show();
+                    Toast.makeText(SplashActivity.this,"下载成功",Toast.LENGTH_LONG).show();
                     //跳转到系统下载页面,安装
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    Intent intent=new Intent(Intent.ACTION_VIEW);
                     intent.addCategory(Intent.CATEGORY_DEFAULT);
                     intent.setDataAndType(Uri.fromFile(responseInfo.result),
                             "application/vnd.android.package-archive");
@@ -297,11 +280,11 @@ public class SplashActivity extends Activity {
 
                 @Override
                 public void onFailure(HttpException e, String s) {
-                    Toast.makeText(SplashActivity.this, "下载失败", Toast.LENGTH_LONG).show();
+                    Toast.makeText(SplashActivity.this,"下载失败",Toast.LENGTH_LONG).show();
                 }
             });
-        } else {
-            Toast.makeText(SplashActivity.this, "没有SD卡", Toast.LENGTH_LONG).show();
+        }else {
+            Toast.makeText(SplashActivity.this,"没有SD卡",Toast.LENGTH_LONG).show();
         }
 
     }
